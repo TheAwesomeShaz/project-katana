@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] Animator anim;
+    [SerializeField] Collider capsuleCollider;
     [SerializeField] float runSpeed;
     [SerializeField] float attackMoveSpeed;
     [SerializeField] bool isRunning;
@@ -40,6 +42,11 @@ public class PlayerController : MonoBehaviour
             isRunning = false;
             isAttacking = true;
         }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -61,6 +68,7 @@ public class PlayerController : MonoBehaviour
         isRunning = false;
         isAttacking = false;
         anim.enabled = false;
+        capsuleCollider.enabled = false;
     }
 
     private void HandleAnimation()
@@ -80,6 +88,9 @@ public class PlayerController : MonoBehaviour
 
     void OnSwipeInput(SwipeData data)
     {
+        if (!isDead)
+        {
+
         isRunning = false;
         isAttacking = true;
         
@@ -103,6 +114,7 @@ public class PlayerController : MonoBehaviour
 
                 break;
         }
+        }   
 
 
     }
