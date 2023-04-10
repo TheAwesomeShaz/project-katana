@@ -65,7 +65,7 @@ public class InputHandler : MonoBehaviour
         }
         else
         {
-            Debug.Log("No Swipe Detected!");
+            //Debug.Log("No Swipe Detected!");
         }
     }
 
@@ -99,27 +99,6 @@ public class InputHandler : MonoBehaviour
     {
         return VerticalMoveValue() > HorizontalMoveValue();
     }
-
-
-    //void OnSwipeUp()
-    //{
-    //    //Do something when swiped up
-    //}
-
-    //void OnSwipeDown()
-    //{
-    //    //Do something when swiped down
-    //}
-
-    //void OnSwipeLeft()
-    //{
-    //    //Do something when swiped left
-    //}
-
-    //void OnSwipeRight()
-    //{
-    //    //Do something when swiped right
-    //}
 }
 
 public struct SwipeData

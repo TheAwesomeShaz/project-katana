@@ -25,8 +25,8 @@ RenderSettings:
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 0
-  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SubtractiveShadowColor: {r: 0.28773582, g: 0.48931983, b: 1, a: 1}
+  m_SkyboxMaterial: {fileID: 2100000, guid: ceb0a3ed2cb53a94fa21843cc958c52b, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.122449405, g: 0.17961837, b: 0.2624889, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -352,7 +352,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 6ed2cf15184304a4ebd8d694ad9a2c79, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -425,7 +425,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -565,6 +565,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 891658d4c8574454a8ec1461caa6d17e, type: 3}
+--- !u!4 &1489802172 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1489802172, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
+  m_PrefabInstance: {fileID: 7133651950802281737}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1557721597
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -805,6 +810,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1489802172, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.006
+      objectReference: {fileID: 0}
     - target: {fileID: 7129559995029011617, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -853,9 +862,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 7133651951488501882, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
-      propertyPath: field of view
-      value: 101
+    - target: {fileID: 7182451222061964686, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
+      propertyPath: smokeFXPos
+      value: 
+      objectReference: {fileID: 1489802172}
+    - target: {fileID: 7182451222061964686, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
+      propertyPath: attackCoolDown
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7182451222061964686, guid: f49a3049883644548a4cc8df74f354c4, type: 3}
+      propertyPath: stopEmissionDelay
+      value: 0.6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f49a3049883644548a4cc8df74f354c4, type: 3}

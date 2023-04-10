@@ -10,8 +10,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Collider capsuleCollider;
     [SerializeField] float runSpeed;
     [SerializeField] float attackMoveSpeed;
+    [SerializeField] float attackCoolDown = 0.5f;
     [SerializeField] bool isRunning;
     [SerializeField] bool isAttacking;
+    [SerializeField] bool canAttack;
+    [SerializeField] float stopEmissionDelay;
+
+    [SerializeField] Transform smokeFXPos;
+
+    [SerializeField] ParticleSystem fireTrail;
+
+    [SerializeField] GameObject fireExplosionFX;
+    [SerializeField] GameObject stepFX;
 
     Enemy currentEnemy;
 
@@ -22,7 +32,15 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         InputHandler.OnSwipe += OnSwipeInput;
+        
+        StopEmission();
+
     }
+    private void Start()
+    {
+        canAttack = true;
+    }
+
 
     void Update()
     {
@@ -65,10 +83,14 @@ public class PlayerController : MonoBehaviour
 
     public void Die()
     {
+        StopEmission();
         isRunning = false;
         isAttacking = false;
         anim.enabled = false;
         capsuleCollider.enabled = false;
+    }
+
+    public void CreateSmokeFX() { 
     }
 
     private void HandleAnimation()
@@ -83,34 +105,39 @@ public class PlayerController : MonoBehaviour
         if (canKillEnemy)
         {
             currentEnemy?.Die();
+            GameObject fireFX = Instantiate(fireExplosionFX,currentEnemy.transform,false);
+            Destroy(fireFX,2f);
         }
     }
 
     void OnSwipeInput(SwipeData data)
     {
-        if (!isDead)
+        if (!isDead && canAttack)
         {
 
         isRunning = false;
         isAttacking = true;
-        
+        canAttack = false;
+
+        StartCoroutine(SetAttackTrueAfterTime(attackCoolDown));
 
         // different swipes for different powerups
         switch (data.direction){
             case SwipeDirection.Up:
-                Debug.Log("UP Swipe Detected!");
+                //Debug.Log("UP Swipe Detected!");
 
                 break;
             case SwipeDirection.Down:
-                Debug.Log("Down Swipe Detected!");
+                //Debug.Log("Down Swipe Detected!");
 
                 break;
             case SwipeDirection.Left:
-                Debug.Log("Left Swipe Detected!");
+                //Debug.Log("Left Swipe Detected!");
 
                 break;
             case SwipeDirection.Right:
-                Debug.Log("Right Swipe Detected!");
+                    //Debug.Log("Right Swipe Detected!");
+                    StartEmission();
 
                 break;
         }
@@ -119,5 +146,43 @@ public class PlayerController : MonoBehaviour
 
     }
 
-   
+    public void StepFX()
+    {
+        GameObject smokeFX = Instantiate(stepFX, smokeFXPos.position, Quaternion.identity);
+        Destroy(smokeFX, 2f);
+    }
+
+    public void DelayedStopEmission(float time)
+    {
+        StartCoroutine(StopEmissionAfterTime(time));
+    }
+
+    public void StopEmission()
+    { 
+        var fireEmission = fireTrail.emission;
+        fireEmission.enabled = false;
+        Debug.Log("Stop Emission");
+    }
+
+    IEnumerator StopEmissionAfterTime(float time)
+    {
+        yield return new WaitForSeconds(time);
+        StopEmission();
+    }
+
+    IEnumerator SetAttackTrueAfterTime(float time)
+    {
+        yield return new WaitForSeconds(time);
+        canAttack = true;
+    }
+
+    public void StartEmission()
+    {
+        var fireEmission = fireTrail.emission;
+        fireEmission.enabled = true;
+
+        DelayedStopEmission(stopEmissionDelay);
+    }
+
+
 }
