@@ -14,7 +14,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] bool isRunning;
     [SerializeField] bool isAttacking;
     [SerializeField] bool canAttack;
-    [SerializeField] float stopEmissionDelay;
+    [SerializeField] float stopEmissionDelay = 0.6f;
+
+    int attackType = 0;
 
     [SerializeField] Transform smokeFXPos;
 
@@ -22,7 +24,7 @@ public class PlayerController : MonoBehaviour
 
 
 
-    [SerializeField] GameObject particleExplosionFX;
+    [SerializeField] GameObject[] particleExplosionFX;
     [SerializeField] GameObject stepFX;
 
     Enemy currentEnemy;
@@ -34,8 +36,8 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         InputHandler.OnSwipe += OnSwipeInput;
-        
-        //StopEmission();
+
+        StopEmission();
 
     }
     private void Start()
@@ -85,7 +87,7 @@ public class PlayerController : MonoBehaviour
 
     public void Die()
     {
-        //StopEmission();
+        StopEmission();
         isRunning = false;
         isAttacking = false;
         anim.enabled = false;
@@ -107,7 +109,7 @@ public class PlayerController : MonoBehaviour
         if (canKillEnemy)
         {
             currentEnemy?.Die();
-            GameObject fireFX = Instantiate(particleExplosionFX,currentEnemy.transform.position,Quaternion.identity);
+            GameObject fireFX = Instantiate(particleExplosionFX[attackType],currentEnemy.transform.position,Quaternion.identity);
             Destroy(fireFX,2f);
         }
     }
@@ -117,35 +119,34 @@ public class PlayerController : MonoBehaviour
         if (!isDead && canAttack)
         {
 
-        isRunning = false;
-        isAttacking = true;
-        canAttack = false;
+            isRunning = false;
+            isAttacking = true;
+            canAttack = false;
 
-        StartCoroutine(SetAttackTrueAfterTime(attackCoolDown));
+            StartCoroutine(SetAttackTrueAfterTime(attackCoolDown));
 
         // different swipes for different powerups
         switch (data.direction){
             case SwipeDirection.Up:
-                //Debug.Log("UP Swipe Detected!");
-
+                attackType = (int)AttackType.Water;
                 break;
             case SwipeDirection.Down:
-                //Debug.Log("Down Swipe Detected!");
+                attackType = (int)AttackType.Poison;
 
                 break;
+
             case SwipeDirection.Left:
-                //Debug.Log("Left Swipe Detected!");
 
                 break;
+
             case SwipeDirection.Right:
-                    //Debug.Log("Right Swipe Detected!");
-                    //StartEmission();
+                    Debug.Log("Right Swipe Detected!");
+                    attackType = (int)AttackType.Fire;
 
                 break;
-        }
+            }
+            StartEmission();
         }   
-
-
     }
 
     public void StepFX()
@@ -154,33 +155,37 @@ public class PlayerController : MonoBehaviour
         Destroy(smokeFX, 2f);
     }
 
-    public void DelayedStopEmission(float time)
+    public void StopEmission()
     {
-        StartCoroutine(StopEmissionAfterTime(time));
+
+        for (int i = 0; i < particleTrails.Length; i++)
+        {
+            var particleEmission = particleTrails[i].emission;
+            particleEmission.enabled = false;
+
+            var particleChild = particleTrails[i].transform.GetChild(0).GetComponent<ParticleSystem>();
+
+            var particleChildEmission = particleChild.emission;
+            particleChildEmission.enabled = false;
+        }
+
+        //Invoke(nameof(DisableParticleTrails), 1f);
+
+        Debug.Log("Stop Emission for all of em");
     }
 
-    public void StopEmission(int attackType)
-    {
-        if (attackType == 4)
-        {
-            foreach (var particleTrail in particleTrails)
-            {
-                var particleEmission = particleTrail.emission;
-                particleEmission.enabled = false;
-            }
-        }
-        else
-        {
-            var particleEmission = particleTrails[attackType].emission;
-            particleEmission.enabled = false;
-        }
-        Debug.Log("Stop Emission");
-    }
+    //public void DisableParticleTrails()
+    //{
+    //    foreach (var particleTrail in particleTrails)
+    //    {
+    //        particleTrail.transform.GetChild(0).gameObject.SetActive(false);
+    //    }
+    //}
 
     IEnumerator StopEmissionAfterTime(float time)
     {
         yield return new WaitForSeconds(time);
-        //StopEmission();
+        StopEmission();
     }
 
     IEnumerator SetAttackTrueAfterTime(float time)
@@ -189,21 +194,28 @@ public class PlayerController : MonoBehaviour
         canAttack = true;
     }
 
-    public void StartEmission(int attackType)
+    public void StartEmission()
     {
+        particleTrails[attackType].gameObject.SetActive(true);
 
-        var particleEmission = particleTrails[(int)attackType].emission;
-        particleEmission.enabled = true;        
+        var particleEmission = particleTrails[attackType].emission;
+        particleEmission.enabled = true;
 
-        DelayedStopEmission(stopEmissionDelay);
+        var particleChild = particleTrails[attackType].transform.GetChild(0).GetComponent<ParticleSystem>();
+
+        var particleChildEmission = particleChild.emission;
+        particleChildEmission.enabled = true;
+
+        StartCoroutine(StopEmissionAfterTime(stopEmissionDelay));
     }
 
 
 }
 
-//public enum AttackType
-//{
-//    Fire,
-//    Water,
-//    Poison,
-//}
+public enum AttackType
+{
+    Fire,
+    Water,
+    Poison,
+    None,
+}
