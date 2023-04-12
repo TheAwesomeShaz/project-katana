@@ -1,6 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,30 +9,36 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] Animator anim;
     [SerializeField] Collider capsuleCollider;
-    [SerializeField] float runSpeed;
-    [SerializeField] float attackMoveSpeed;
-    [SerializeField] float attackCoolDown = 0.5f;
-    [SerializeField] bool isRunning;
-    [SerializeField] bool isAttacking;
-    [SerializeField] bool canAttack;
-    [SerializeField] float stopEmissionDelay = 0.6f;
-
-    int attackType = 0;
-
-    [SerializeField] Transform smokeFXPos;
-
+    [SerializeField] Rigidbody rb;
     [SerializeField] ParticleSystem[] particleTrails;
-
-
-
     [SerializeField] GameObject[] particleExplosionFX;
     [SerializeField] GameObject stepFX;
+    [SerializeField] Transform smokeFXPos;
 
-    Enemy currentEnemy;
-
-    [SerializeField] bool isDead;
+    public AnimationCurve jumpCurve;
 
     public bool canKillEnemy;
+    [SerializeField] float runSpeed;
+    [SerializeField] float attackMoveSpeed;
+    [SerializeField] float jumpSpeed;
+    [SerializeField] float attackCoolDown = 0.5f;
+    [SerializeField] float stopEmissionDelay = 0.6f;
+
+    [SerializeField] bool isRunning;
+    [SerializeField] bool isAttacking;
+    [SerializeField] bool isJumping;
+    [SerializeField] bool canAttack;
+    [SerializeField] bool isDead;
+
+    [SerializeField] string currentAttackString = null;
+
+    string[] attackStrings = { "Attack", "Attack2", "AttackDash" };
+    int attackType = 0;
+    Enemy currentEnemy;
+    Transform currentJumpTransform;
+
+
+    float currentJumpTime;
 
     private void Awake()
     {
@@ -48,22 +55,25 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (isRunning && !isDead)
-        {
-            transform.Translate(Vector3.forward * runSpeed * Time.deltaTime);
-        }
-        if (isAttacking)
-        {
-            transform.Translate(Vector3.forward * attackMoveSpeed* Time.deltaTime);
-        }
-        HandleAnimation();
+        //if (!isDead &&!isJumping && isRunning)
+        //{
+        //    transform.Translate(Vector3.forward * runSpeed * Time.deltaTime);
+        //}
+        //if (!isDead && isAttacking)
+        //{
+        //    transform.Translate(Vector3.forward * attackMoveSpeed * Time.deltaTime);
+        //}
 
-        // Debug input for PC
-        if (Input.GetKeyDown(KeyCode.A))
+        if (!isDead && isJumping)
         {
-            isRunning = false;
-            isAttacking = true;
+            Debug.Log(currentJumpTransform);
+            currentJumpTime += Time.deltaTime;
+            Vector3 pos = Vector3.Lerp(transform.position, currentJumpTransform.position, currentJumpTime);
+            pos.y += jumpCurve.Evaluate(currentJumpTime);
+            transform.position = pos;
         }
+
+        HandleAnimation();
 
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -71,13 +81,36 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent<Enemy>(out currentEnemy))
         {
             canKillEnemy = true;
         }
+        if (other.CompareTag("Jump"))
+        {
+            Debug.Log("Collided with jump");
+            currentJumpTransform = other.transform.GetChild(0).transform;
+            Jump();
+        }
     }
+
+    //public void SetJump(bool isLanding)
+    //{
+    //    if (!isLanding)
+    //    {
+    //        Jump();
+    //    }
+    //    else
+    //    {
+    //        isRunning = true;
+    //        isJumping = false;
+    //        isAttacking = false;
+    //        rb.isKinematic = false;
+    //    }
+    //}
 
     public void StartRunningAgain()
     {
@@ -92,16 +125,27 @@ public class PlayerController : MonoBehaviour
         isAttacking = false;
         anim.enabled = false;
         capsuleCollider.enabled = false;
+        isDead = true;
     }
 
-    public void CreateSmokeFX() { 
+    public void Jump()
+    {
+        isRunning = false;
+        isAttacking = false;
+        isJumping = true;
+
+        anim.SetTrigger("Jump");
     }
+
+
 
     private void HandleAnimation()
     {
         anim.SetBool("Run", isRunning);
-        anim.SetBool("Attack", isAttacking);
-        anim.SetBool("Die", isDead);
+        if(currentAttackString != null)
+        {
+        anim.SetBool(currentAttackString, isAttacking);
+        }
     }
 
     public void KillEnemy()
@@ -116,8 +160,11 @@ public class PlayerController : MonoBehaviour
 
     void OnSwipeInput(SwipeData data)
     {
+
+
         if (!isDead && canAttack)
         {
+            currentAttackString = attackStrings[Random.Range(0, attackStrings.Length)];
 
             isRunning = false;
             isAttacking = true;
