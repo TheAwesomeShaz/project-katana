@@ -11,7 +11,7 @@ public class JumpTrigger : MonoBehaviour
         if (other.transform.root.TryGetComponent<PlayerController>(out PlayerController player))
         {
             //player.SetJump(isLandingPoint);
-            
+
         }
     }
 }

@@ -8,8 +8,7 @@ using UnityEngine.SceneManagement;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] Animator anim;
-    [SerializeField] Collider capsuleCollider;
-    [SerializeField] Rigidbody rb;
+    [SerializeField] CharacterController characterController;
     [SerializeField] ParticleSystem[] particleTrails;
     [SerializeField] GameObject[] particleExplosionFX;
     [SerializeField] GameObject stepFX;
@@ -19,7 +18,13 @@ public class PlayerController : MonoBehaviour
 
     public bool canKillEnemy;
     [SerializeField] float runSpeed;
-    [SerializeField] float attackMoveSpeed;
+    [SerializeField] float currentAttackMoveSpeed;
+    [SerializeField] float attackMoveSpeed = 1f;
+    [SerializeField] float dashMoveSpeed = 10f;
+
+    [SerializeField] float dashSpeed;
+    [SerializeField] float dashTime;
+
     [SerializeField] float jumpSpeed;
     [SerializeField] float attackCoolDown = 0.5f;
     [SerializeField] float stopEmissionDelay = 0.6f;
@@ -38,7 +43,7 @@ public class PlayerController : MonoBehaviour
     Transform currentJumpTransform;
 
 
-    float currentJumpTime;
+     float currentJumpTime;
 
     private void Awake()
     {
@@ -50,19 +55,22 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         canAttack = true;
+        currentAttackMoveSpeed = attackMoveSpeed;
     }
 
 
     void Update()
     {
-        //if (!isDead &&!isJumping && isRunning)
-        //{
-        //    transform.Translate(Vector3.forward * runSpeed * Time.deltaTime);
-        //}
-        //if (!isDead && isAttacking)
-        //{
-        //    transform.Translate(Vector3.forward * attackMoveSpeed * Time.deltaTime);
-        //}
+        if (!isDead && !isJumping && isRunning)
+        {
+            characterController.SimpleMove(Vector3.forward * runSpeed/* * Time.deltaTime*/);
+            //transform.Translate(Vector3.forward * runSpeed * Time.deltaTime);
+        }
+        if (!isDead && isAttacking)
+        {
+            characterController.SimpleMove(Vector3.forward * currentAttackMoveSpeed);
+            //transform.Translate(Vector3.forward * attackMoveSpeed * Time.deltaTime);
+        }
 
         if (!isDead && isJumping)
         {
@@ -74,6 +82,8 @@ public class PlayerController : MonoBehaviour
         }
 
         HandleAnimation();
+
+        
 
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -91,26 +101,29 @@ public class PlayerController : MonoBehaviour
         }
         if (other.CompareTag("Jump"))
         {
-            Debug.Log("Collided with jump");
+            
             currentJumpTransform = other.transform.GetChild(0).transform;
             Jump();
         }
+        if (other.CompareTag("Land"))
+        {
+            Debug.Log("landing trigger");
+            Land();
+        }
     }
 
-    //public void SetJump(bool isLanding)
-    //{
-    //    if (!isLanding)
-    //    {
-    //        Jump();
-    //    }
-    //    else
-    //    {
-    //        isRunning = true;
-    //        isJumping = false;
-    //        isAttacking = false;
-    //        rb.isKinematic = false;
-    //    }
-    //}
+    public void ResetAttackSpeed()
+    {
+        currentAttackMoveSpeed = attackMoveSpeed;
+        canAttack = false;
+    }
+
+    private void Land()
+    {
+        
+        isJumping = false;
+        isRunning = true;
+    }
 
     public void StartRunningAgain()
     {
@@ -124,7 +137,7 @@ public class PlayerController : MonoBehaviour
         isRunning = false;
         isAttacking = false;
         anim.enabled = false;
-        capsuleCollider.enabled = false;
+        characterController.enabled = false;
         isDead = true;
     }
 
@@ -137,14 +150,13 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("Jump");
     }
 
-
-
     private void HandleAnimation()
     {
         anim.SetBool("Run", isRunning);
         if(currentAttackString != null)
         {
-        anim.SetBool(currentAttackString, isAttacking);
+            
+            anim.SetBool(currentAttackString, isAttacking);
         }
     }
 
@@ -158,9 +170,29 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    IEnumerator Dash()
+    {
+        float startTime = Time.time;
+        while (Time.time < startTime + dashTime)
+        {
+            characterController.Move(Vector3.forward * dashSpeed * Time.deltaTime);
+            yield return null;
+        }
+    }
+
     void OnSwipeInput(SwipeData data)
     {
-
+        if (!isDead && !characterController.isGrounded)
+        {
+            isRunning = false;
+            isJumping = false;
+            isAttacking=true;
+            currentAttackString = "AttackDash";
+            currentAttackMoveSpeed = dashMoveSpeed;
+            StartCoroutine(Dash()); 
+            Debug.Log("Using Dash Attack");
+            Debug.Log(currentAttackString + isAttacking);
+        }
 
         if (!isDead && canAttack)
         {
@@ -204,7 +236,6 @@ public class PlayerController : MonoBehaviour
 
     public void StopEmission()
     {
-
         for (int i = 0; i < particleTrails.Length; i++)
         {
             var particleEmission = particleTrails[i].emission;
@@ -216,18 +247,8 @@ public class PlayerController : MonoBehaviour
             particleChildEmission.enabled = false;
         }
 
-        //Invoke(nameof(DisableParticleTrails), 1f);
-
         Debug.Log("Stop Emission for all of em");
     }
-
-    //public void DisableParticleTrails()
-    //{
-    //    foreach (var particleTrail in particleTrails)
-    //    {
-    //        particleTrail.transform.GetChild(0).gameObject.SetActive(false);
-    //    }
-    //}
 
     IEnumerator StopEmissionAfterTime(float time)
     {
@@ -255,8 +276,6 @@ public class PlayerController : MonoBehaviour
 
         StartCoroutine(StopEmissionAfterTime(stopEmissionDelay));
     }
-
-
 }
 
 public enum AttackType
